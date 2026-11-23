@@ -1,5 +1,4 @@
 #pragma once
-#include <concepts>
 #include <limits>
 #include <type_traits>
 #include <cstddef>
@@ -9,16 +8,8 @@
 #include "../libs/Pair.hpp"
 #include "graph_exceptions.hpp"
 
-template<typename T, typename K, typename V>
-concept dictionary = std::derived_from<T, IDictionary<K, V>>;
-
-template<typename T>
-concept Num = std::is_arithmetic_v<T>;
-
 template<typename Index, typename VertexData, typename Weight,
          template<typename, typename> class Container>
-requires dictionary<Container<Index, VertexData>, Index, VertexData>
-      && dictionary<Container<Pair<Index, Index>, Weight>, Pair<Index, Index>, Weight>
 class Graph {
 public:
     using EdgeKey = Pair<Index, Index>;
@@ -104,9 +95,9 @@ public:
     }
 
     MutableArraySequence<Weight> dijkstra(const Index& start,
-                                          MutableArraySequence<Index>& previous)
-        requires Num<Weight>
-    {
+                                          MutableArraySequence<Index>& previous) {
+        static_assert(std::is_arithmetic<Weight>::value,
+                      "Dijkstra requires numeric Weight");
         auto verts = vertexs_.get_keys();
         if (!vertexs_.contains_key(start))
             throw vertex_not_found("dijkstra: start vertex not found");
